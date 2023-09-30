@@ -14,8 +14,9 @@
 - Установить SDK проекта в любую JDK 17 версии. Для этого жмем Ctrl+Alt+Shift+S, попадаем в меню Project Structure
 ![img.png](readme_images/project_sdk.png)Тут выбираем опцию Project, и в поле SDK указываем любую JDK 17 версии, там же в выборе можно скачать такую.
 - Зайти в настройки Gradle Ctrl+Alt+S -> Build, Execution, Deployment | Build Tools | Gradle или кнопка шестеренки в боковом меню
-![gradle-cog.png](readme_images%2Fgradle-cog.png)После чего в открывшемся окне настроек в поле Gradle JVM ставим вариант Project SDK![img.png](readme_images/grade_jvm.png)
-- Скорее всего, для того чтобы Gradle проект опознался как живой, понадобится переменная ANDROID_HOME, которая будет указывать на Android SDK на локальной машине
+![gradle-cog.png](readme_images%2Fgradle-cog.png)
+После чего в открывшемся окне настроек в поле Gradle JVM ставим вариант Project SDK![img.png](readme_images/grade_jvm.png)
+- Скорее всего, для того чтобы Gradle проект опознался как живой, понадобится переменная ANDROID_HOME, которая будет указывать на Android SDK на локальной машине.
 Можно попытаться без него, но если где-то в логах или в уведомлениях будет требование создать переменную среды ANDROID_HOME - делаем
 
 При любой неполадке в проекте жмем на кнопку обновления (находится в боковом меню Gradle, самая первая кнопка).
