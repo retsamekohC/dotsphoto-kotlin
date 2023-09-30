@@ -1,8 +1,9 @@
-rootProject.name = "MyApplication"
+rootProject.name = "dotsphoto-kotlin-ui"
 
 include(":androidApp")
 include(":shared")
 include(":desktopApp")
+include(":web")
 
 pluginManagement {
     repositories {
@@ -36,6 +37,7 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         google()
+        gradlePluginPortal()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 }
