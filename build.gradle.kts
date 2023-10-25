@@ -7,3 +7,11 @@ plugins {
     id("com.android.library").apply(false)
     id("org.jetbrains.compose").apply(false)
 }
+
+dependencies {
+    val ktor_version: String by project
+
+    dependencies {
+        implementation("io.ktor:ktor-client-core:2.3.5")
+    }
+}

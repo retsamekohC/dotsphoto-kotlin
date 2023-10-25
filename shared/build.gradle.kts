@@ -15,6 +15,8 @@ kotlin {
         binaries.executable()
     }
 
+    val ktor_version = "2.3.5"
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -23,23 +25,28 @@ kotlin {
                 implementation(compose.material)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+                implementation("io.ktor:ktor-client-core:$ktor_version")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
             }
         }
         val androidMain by getting {
             dependencies {
-                api("androidx.activity:activity-compose:1.7.2")
+                api("androidx.activity:activity-compose:1.8.0")
                 api("androidx.appcompat:appcompat:1.6.1")
-                api("androidx.core:core-ktx:1.10.1")
+                api("androidx.core:core-ktx:1.12.0")
+                implementation("io.ktor:ktor-client-android:$ktor_version")
             }
         }
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.common)
+                implementation("io.ktor:ktor-client-apache5:$ktor_version")
             }
         }
         val jsMain by getting {
             dependencies {
                 implementation(compose.html.core)
+                implementation("io.ktor:ktor-client-js:$ktor_version")
             }
         }
     }
@@ -65,5 +72,5 @@ android {
     }
 }
 dependencies {
-    implementation("androidx.compose.ui:ui-tooling-preview-android:1.5.2")
+    implementation("androidx.compose.ui:ui-tooling-preview-android:1.5.4")
 }
