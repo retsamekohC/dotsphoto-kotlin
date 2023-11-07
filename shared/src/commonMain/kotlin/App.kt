@@ -36,7 +36,7 @@ fun App() {
                 );
 
             }
-            getApiClientInstance().getRootAlbumPhotoIds()
+            //getApiClientInstance().getRootAlbumPhotoIds()
         }
     }
 }
@@ -45,28 +45,5 @@ fun getApiClientInstance(): ApiClient {
     return ApiClient();
 }
 
-class ApiClient {
-    companion object {
-        val rootPhotoMap = mutableMapOf(
-            1L to "",
-            2L to "",
-            3L to "",
-            4L to "",
-            5L to ""
-        )
-        suspend fun getRootAlbumPhotoIds() : List<Long> {
-            return listOf(1,2,3,4,5)
-        }
-
-        suspend fun getPhotoById(id: Long) : String {
-            return rootPhotoMap[id]?:""
-        }
-
-        suspend fun postPhotoToRootAlbum(photoBlob: ByteArray) {
-            val maxId = rootPhotoMap.keys.max();
-            rootPhotoMap.put(maxId+1, photoBlob.encodeBase64())
-        }
-    }
-}
 
 expect fun getPlatformName(): String
