@@ -4,10 +4,12 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
+import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Int8Array
 import org.w3c.dom.HTMLInputElement
-import org.w3c.files.FileList
-import org.w3c.files.FileReaderSync
+import org.w3c.dom.asList
+import org.w3c.files.*
+import org.w3c.xhr.ProgressEvent
 import react.RBuilder
 import react.RComponent
 import react.RProps
@@ -16,6 +18,7 @@ import react.dom.div
 import react.dom.img
 import react.dom.input
 import react.dom.render
+import kotlin.coroutines.suspendCoroutine
 
 fun main(): Unit = run {
     render(document.getElementById("root")) {
@@ -35,13 +38,17 @@ class App : RComponent<RProps, RState>() {
         reloadPage()
     }
 
-    private fun handleImageUpload(fileList: FileList?) {
-        val file = fileList?.item(0)
-        if (file != null) {
+    private fun handleImageUpload(fileList: List<File>) {
+        fileList.forEach {file ->
             scope.launch {
-                val reader = FileReaderSync()
-                val arrayBuffer = reader.readAsArrayBuffer(file).run { Int8Array(this) as ByteArray }
-                processImage(arrayBuffer)
+                val reader = FileReader()
+                reader.onload = {
+                    scope.launch {
+                        val res = reader.result as ArrayBuffer
+                        processImage(res.asByteArray())
+                    }
+                }
+                reader.readAsArrayBuffer(file)
             }
         }
     }
@@ -67,7 +74,11 @@ class App : RComponent<RProps, RState>() {
             input(type = InputType.file) {
                 attrs {
                     onChangeFunction = { event ->
-                        val fileList = (event.target as HTMLInputElement).files
+                        val files = (event.target as HTMLInputElement).files!!
+                        val fileList = ArrayList<File>()
+                        for (i in 0..<files.length) {
+                            fileList.add(files[i]!!)
+                        }
                         handleImageUpload(fileList)
                     }
                     accept = "image/*"
@@ -92,3 +103,9 @@ class App : RComponent<RProps, RState>() {
         }
     }
 }
+
+@Suppress("CAST_NEVER_SUCCEEDS")
+fun ArrayBuffer?.asByteArray(): ByteArray? = this?.run { Int8Array(this) as ByteArray }
+
+@Suppress("CAST_NEVER_SUCCEEDS")
+fun ArrayBuffer.asByteArray(): ByteArray = this.run { Int8Array(this) as ByteArray }
