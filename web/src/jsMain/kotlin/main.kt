@@ -1,75 +1,73 @@
 import kotlinx.browser.document
-import kotlinx.browser.window
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Int8Array
 import org.w3c.dom.HTMLInputElement
-import org.w3c.dom.asList
-import org.w3c.files.*
-import org.w3c.xhr.ProgressEvent
-import react.RBuilder
-import react.RComponent
-import react.RProps
-import react.RState
+import org.w3c.files.File
+import org.w3c.files.FileReader
+import org.w3c.files.get
+import react.*
 import react.dom.div
 import react.dom.img
 import react.dom.input
 import react.dom.render
-import kotlin.coroutines.suspendCoroutine
 
-fun main(): Unit = run {
-    render(document.getElementById("root")) {
-        child(App::class) {  }
-    }
+external interface PhotoBoxProps: RProps {
+    var photos: List<String>
 }
 
-@OptIn(ExperimentalJsExport::class)
-@JsExport
-class App : RComponent<RProps, RState>() {
-
-    private val scope = MainScope()
-    private var photos = emptyList<String>()
-
-    private suspend fun processImage(imageData: ByteArray) {
-        ApiClient.postPhotoToRootAlbum(imageData)
-        reloadPage()
-    }
-
-    private fun handleImageUpload(fileList: List<File>) {
-        fileList.forEach {file ->
-            scope.launch {
-                val reader = FileReader()
-                reader.onload = {
-                    scope.launch {
-                        val res = reader.result as ArrayBuffer
-                        processImage(res.asByteArray())
-                    }
-                }
-                reader.readAsArrayBuffer(file)
+@OptIn(DelicateCoroutinesApi::class)
+fun main(): Unit = run {
+    val app = functionalComponent<RProps> {
+        val (photosState, setPhotoState) = useState<ArrayList<String>>(ArrayList())
+        useEffect(emptyList()) {
+            GlobalScope.launch {
+                setPhotoState(ArrayList(ApiClient.getRootAlbumPhotoIds().map {id ->
+                    ApiClient.getPhotoById(id)
+                }))
             }
         }
-    }
-
-    private fun reloadPage() {
-        window.location.reload()
-    }
-
-    private suspend fun loadPhotos() {
-        val photoIds = ApiClient.getRootAlbumPhotoIds()
-        val loadedPhotos = mutableListOf<String>()
-
-        for (photoId in photoIds) {
-            val photoData = ApiClient.getPhotoById(photoId)
-            loadedPhotos.add(photoData)
+        val processImage = {imageData:ByteArray ->
+            GlobalScope.launch {
+                ApiClient.postPhotoToRootAlbum(imageData)
+                ApiClient.getRootAlbumPhotoIds().forEach {id ->
+                    val copy = ArrayList(photosState)
+                    copy.add(ApiClient.getPhotoById(id))
+                    setPhotoState (copy)
+                }
+            }
         }
 
-        photos = loadedPhotos
-    }
+        val handleImageUpload = { fileList: List<File> ->
+            fileList.forEach { file ->
+                GlobalScope.launch {
+                    val reader = FileReader()
+                    reader.onload = {
+                        GlobalScope.launch {
+                            val res = reader.result as ArrayBuffer
+                            processImage(res.asByteArray())
+                        }
+                    }
+                    reader.readAsArrayBuffer(file)
+                }
+            }
+        }
+        val photoBox = functionalComponent<PhotoBoxProps> {
+            div {
+                for (photo in it.photos) {
+                    img {
+                        attrs {
+                            src = "data:image/jpeg;base64,${photo}"
+                        }
+                    }
+                }
+            }
+        }
 
-    override fun RBuilder.render() {
         div {
             input(type = InputType.file) {
                 attrs {
@@ -84,23 +82,13 @@ class App : RComponent<RProps, RState>() {
                     accept = "image/*"
                 }
             }
-
-            div {
-                for (photoData in photos) {
-                    img {
-                        attrs {
-                            src = "data:image/jpeg;base64,${photoData}"
-                        }
-                    }
-                }
+            child(photoBox) {
+                attrs.photos = photosState
             }
         }
     }
-
-    init {
-        scope.launch {
-            loadPhotos()
-        }
+    render(document.getElementById("root")) {
+        child(app)
     }
 }
 
