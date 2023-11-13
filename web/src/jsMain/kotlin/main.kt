@@ -4,6 +4,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
 import kotlinx.css.properties.borderBottom
+import kotlinx.css.properties.scale
+import kotlinx.css.properties.transform
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
 import org.khronos.webgl.ArrayBuffer
@@ -22,7 +24,17 @@ external interface PhotoBoxProps : RProps {
 
 object ComponentStyles : StyleSheet("ComponentStyles", isStatic = true) {
     val containerRowCenterSelfFill by css {
-
+        width = LinearDimension("100%")
+        display = Display.flex
+        flex(1.0, 0.0, FlexBasis.auto)
+/*
+        gap = Gap("25px")
+        flexDirection = FlexDirection.column
+        minHeight = LinearDimension("100%")
+        height = LinearDimension("100%")
+        margin(LinearDimension("0"))
+        padding(LinearDimension("0"))
+*/
     }
 
     val sidebar by css {
@@ -59,15 +71,28 @@ object ComponentStyles : StyleSheet("ComponentStyles", isStatic = true) {
     }
 
     val sidebarItemLogoutButton by css {
-
+        color = Color.white
+        backgroundColor = Color.lightGreen
+        border = "none"
+        borderRadius = LinearDimension("5")
+        padding(LinearDimension("7"))
     }
 
     val cardGallery by css {
-
+        display = Display.flex
+        flexGrow = 1.0
+        flexWrap = FlexWrap.wrap
+        justifyContent = JustifyContent.spaceBetween
+        gap = Gap("10")
+        marginRight = LinearDimension("25")
     }
 
     val image by css {
-
+        height = LinearDimension("250")
+        objectFit = ObjectFit.cover
+        hover {
+            transform { scale(1.05) }
+        }
     }
 
     val header by css {
@@ -98,6 +123,20 @@ object ComponentStyles : StyleSheet("ComponentStyles", isStatic = true) {
 
     val contact by css {
 
+    }
+
+    val html by css {
+        margin(LinearDimension("0"))
+        padding(LinearDimension("0"))
+        height = LinearDimension("100%")
+        fontFamily = "Roboto Slab"
+        fontWeight = FontWeight.w300
+        backgroundColor = Color.aquamarine
+        opacity = 1
+        put("background-image", "radial-gradient(var(--light-mint) 2px, transparent 2px), radial-gradient(var(--light-mint) 2px, var(--lightest-mint) 2px)")
+        backgroundSize = "80px 80px"
+        backgroundPosition = "0 0 40px 40px"
+        backgroundAttachment = BackgroundAttachment.fixed
     }
 }
 
@@ -154,63 +193,69 @@ fun main(): Unit = run {
         }
 
         styledDiv {
-            styledH1 {
-                css { +ComponentStyles.headerName }
-                +"МНОГОТОЧИЕ "
-                styledSpan {
-                    css { +ComponentStyles.headerNameEmphasis }
-                    +"ФОТО"
-                }
-            }
-            css { +ComponentStyles.header }
-        }
-
-        styledDiv {
             styledDiv {
-                styledA {
-                    css { +ComponentStyles.sidebarItem }
-                    +"Home"
-                }
-                styledA {
-                    css { +ComponentStyles.sidebarItem }
-                    +"404"
-                }
-
-                styledInput(type = InputType.file) {
-                    attrs {
-                        onChangeFunction = { event ->
-                            val files = (event.target as HTMLInputElement).files!!
-                            val fileList = ArrayList<File>()
-                            for (i in 0..<files.length) {
-                                fileList.add(files[i]!!)
-                            }
-                            handleImageUpload(fileList)
-                        }
-                        accept = "image/*"
+                styledH1 {
+                    css { +ComponentStyles.headerName }
+                    +"МНОГОТОЧИЕ "
+                    styledSpan {
+                        css { +ComponentStyles.headerNameEmphasis }
+                        +"ФОТО"
                     }
-                    css { +ComponentStyles.sidebarItemInput }
                 }
-
-                styledA {
-                    css { +ComponentStyles.sidebarItemLogoutButton }
-                    +"Log out"
-                }
-
-                css { +ComponentStyles.sidebar }
+                css { +ComponentStyles.header }
             }
 
-            child(photoBox) {
-                attrs.photos = photosState
-            }
-
-            css { +ComponentStyles.containerRowCenterSelfFill }
-        }
-
-        styledDiv {
             styledDiv {
-                css { +ComponentStyles.contacts }
+                styledDiv {
+                    styledA(href = "") {
+
+                        css { +ComponentStyles.sidebarItem }
+                        +"Home"
+                    }
+                    styledA(href = "404") {
+                        css { +ComponentStyles.sidebarItem }
+                        +"404"
+                    }
+
+                    styledInput(type = InputType.file) {
+                        attrs {
+                            onChangeFunction = { event ->
+                                val files = (event.target as HTMLInputElement).files!!
+                                val fileList = ArrayList<File>()
+                                for (i in 0..<files.length) {
+                                    fileList.add(files[i]!!)
+                                }
+                                handleImageUpload(fileList)
+                            }
+                            accept = "image/*"
+                        }
+                        css { +ComponentStyles.sidebarItemInput }
+                    }
+
+                    styledA(href = "") {
+                        css { +ComponentStyles.sidebarItemLogoutButton }
+                        +"Log out"
+                    }
+
+                    css { +ComponentStyles.sidebar }
+                }
+
+                child(photoBox) {
+                    attrs.photos = photosState
+                }
+
+                css { +ComponentStyles.containerRowCenterSelfFill }
             }
-            css { +ComponentStyles.footer }
+
+            styledDiv {
+                styledDiv {
+                    css { +ComponentStyles.contacts }
+                }
+                css { +ComponentStyles.footer }
+            }
+            css {
+                +ComponentStyles.html
+            }
         }
     }
     render(document.getElementById("root")) {
