@@ -4,12 +4,14 @@ plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
 }
+dependencies {
+}
 
 kotlin {
     jvm()
     sourceSets {
         val ktorVersion: String by project
-        val jvmMain by getting  {
+        val jvmMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(project(":shared"))
