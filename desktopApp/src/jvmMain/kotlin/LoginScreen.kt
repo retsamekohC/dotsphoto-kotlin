@@ -14,9 +14,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun loginScreen(toggleLogged: (ActiveScreen) -> Unit) {
+    val apiClient = ApiClientLocal.current
+    val doLogin: suspend (String, String) -> Boolean = { username:String, password:String ->
+        apiClient.login(username, password)
+    }
+    val onLoginSuccess = { toggleLogged(ActiveScreen.MAIN) }
     Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
             Row(horizontalArrangement = Arrangement.Center) {
@@ -62,7 +70,7 @@ fun loginScreen(toggleLogged: (ActiveScreen) -> Unit) {
                             }
                         },
                     )
-                    Button(onClick = { Login(login, pass, toggleLogged) }, Modifier.width(100.dp)) {
+                    Button(onClick = { onLoginButtonClick(login, pass, onLoginSuccess, doLogin) }, Modifier.width(100.dp)) {
                         Text("Login")
                     }
                 }
@@ -71,11 +79,17 @@ fun loginScreen(toggleLogged: (ActiveScreen) -> Unit) {
     }
 }
 
-@Suppress("UNUSED_PARAMETER")
-fun Login(
+fun onLoginButtonClick(
     login: String,
     pass: String,
-    toggleLogin: (ActiveScreen) -> Unit,
+    onSuccess: () -> Unit,
+    doLogin: suspend (String, String) -> Boolean
 ) {
-    toggleLogin(ActiveScreen.MAIN)
+    val scope = CoroutineScope(Dispatchers.Default)
+    scope.launch {
+        val result = doLogin(login, pass)
+        if (result) {
+            onSuccess()
+        }
+    }
 }

@@ -19,6 +19,8 @@ kotlin {
                 implementation("io.ktor:ktor-client-apache5:$ktorVersion")
                 implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+                implementation("io.ktor:ktor-client-apache5:$ktorVersion")
+                implementation ("ch.qos.logback:logback-classic:1.4.11")
             }
         }
 
