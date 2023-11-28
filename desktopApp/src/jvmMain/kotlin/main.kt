@@ -5,7 +5,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.ktor.client.*
 import io.ktor.client.engine.apache5.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,17 +28,17 @@ class Test {
     @Composable
     fun AppPreview() {
         var activeScreen by remember { mutableStateOf(ActiveScreen.REGISTRATION) }
-        val changeScreen = { x: ActiveScreen ->
-            activeScreen = x
-        }
+        val goToLogin = { activeScreen = ActiveScreen.LOGIN }
+        val goToMain = { activeScreen = ActiveScreen.MAIN }
+        val goToRegistration = { activeScreen = ActiveScreen.REGISTRATION }
 
-        CompositionLocalProvider(ApiClientLocal provides ApiClient(Apache5) ) {
+        CompositionLocalProvider(ApiClientLocal provides ApiClient(Apache5)) {
             CompositionLocalProvider(CoroutineScopeLocal provides rememberCoroutineScope()) {
                 MaterialTheme {
                     when (activeScreen) {
-                        ActiveScreen.LOGIN -> loginScreen(changeScreen)
-                        ActiveScreen.MAIN -> mainScreen(changeScreen)
-                        ActiveScreen.REGISTRATION -> registrationScreen(changeScreen)
+                        ActiveScreen.LOGIN -> loginScreen(goToMain)
+                        ActiveScreen.MAIN -> mainScreen(goToLogin)
+                        ActiveScreen.REGISTRATION -> registrationScreen(goToLogin)
                     }
                 }
             }

@@ -18,11 +18,19 @@ import kotlinx.coroutines.launch
 import javax.swing.JFileChooser
 
 @Composable
-fun mainScreen(toggleLogout:(ActiveScreen) -> Unit) {
+fun mainScreen(logout:() -> Unit) {
     val apiClient = ApiClientLocal.current
     var trigger by remember { mutableStateOf(false) }
     val list by produceState(listOf<Long>(), trigger) {
         this.value = apiClient.getRootAlbumPhotoIds()
+    }
+
+    val logoutButtonOnClick: () -> Unit = {
+        val scope = CoroutineScope(Dispatchers.Default)
+        scope.launch {
+            apiClient.logout()
+        }
+        logout()
     }
 
     Row {
@@ -41,7 +49,7 @@ fun mainScreen(toggleLogout:(ActiveScreen) -> Unit) {
                 }
             }
             Row(modifier = Modifier.weight(10f), verticalAlignment = Alignment.Bottom) {
-                Button(onClick = { logOut(toggleLogout) }, Modifier.width(100.dp)) {
+                Button(onClick = { logoutButtonOnClick() }, Modifier.width(100.dp)) {
                     Text("Log out")
                 }
             }
@@ -70,10 +78,6 @@ fun PhotoCard(id: Long) {
         modifier = Modifier.background(Color.Black).size(300.dp),
         contentScale = ContentScale.Fit,
     )
-}
-
-fun logOut(toggleLogout:(ActiveScreen) -> Unit) {
-    toggleLogout(ActiveScreen.LOGIN)
 }
 
 fun homeButton() {

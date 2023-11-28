@@ -15,47 +15,30 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
-fun registrationScreen(changeScreen: (ActiveScreen) -> Unit) {
+fun registrationScreen(goToLogin: () -> Unit) {
+    val apiClient = ApiClientLocal.current
+    val doRegistration: suspend (String, String) -> Boolean = { username:String, password:String ->
+        apiClient.register(username, password)
+    }
+
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Column(modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.width(280.dp)) {
                 Text("Welcome", fontSize = TextUnit(2f, TextUnitType.Em), color = Color(110, 20, 239))
             }
-            var firstName by remember { mutableStateOf("") }
-            var lastName by remember { mutableStateOf("") }
-            var patronymic by remember { mutableStateOf("") }
-            var email by remember { mutableStateOf("") }
+            var username by remember { mutableStateOf("") }
             var pass by remember { mutableStateOf("") }
             TextField(
-                firstName, onValueChange = {
-                    firstName = it
+                username, onValueChange = {
+                    username = it
                 },
                 modifier = Modifier.background(Color.Cyan),
                 placeholder = { Text("Egor") }
-            )
-            TextField(
-                lastName, onValueChange = {
-                    lastName = it
-                },
-                modifier = Modifier.background(Color.Cyan),
-                placeholder = { Text("Egorov") }
-            )
-            TextField(
-                patronymic, onValueChange = {
-                    patronymic = it
-                },
-                modifier = Modifier.background(Color.Cyan),
-                placeholder = { Text("Egorovich") }
-            )
-            TextField(
-                email, onValueChange = {
-                    email = it
-                },
-                modifier = Modifier.background(Color.Cyan),
-                placeholder = { Text("name@example.com") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
             var showPassword by remember {
                 mutableStateOf(false)
@@ -89,13 +72,14 @@ fun registrationScreen(changeScreen: (ActiveScreen) -> Unit) {
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.width(280.dp)) {
                 Button(onClick = {
                     registration(
-                        changeScreen,
-                        RegistrationData(firstName, lastName, patronymic, email, pass)
+                        goToLogin,
+                        doRegistration,
+                        RegistrationData(username, pass)
                     )
                 }) {
                     Text("Sign Up")
                 }
-                Button(onClick = { changeScreen(ActiveScreen.LOGIN) }) {
+                Button(onClick = { goToLogin() }) {
                     Text("Sign In")
                 }
             }
@@ -103,19 +87,19 @@ fun registrationScreen(changeScreen: (ActiveScreen) -> Unit) {
     }
 }
 
-
-@Suppress("unused")
 class RegistrationData(
-    var firstName: String,
-    var lastName: String,
-    var patronymics: String,
-    var email: String,
+    var username: String,
     var pass: String
 )
 
-@Suppress("UNUSED_PARAMETER")
-fun registration(changeScreen: (ActiveScreen) -> Unit, regData: RegistrationData) {
-    changeScreen(ActiveScreen.LOGIN)
+fun registration(goToLogin: () -> Unit, doRegistration: suspend (String, String) -> Boolean, regData: RegistrationData) {
+    val scope = CoroutineScope(Dispatchers.Default)
+    scope.launch {
+        val result = doRegistration(regData.username, regData.pass)
+        if (result) {
+            goToLogin()
+        }
+    }
 }
 
 
