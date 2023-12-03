@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun loginScreen(goToMain: () -> Unit) {
     val apiClient = ApiClientLocal.current
-    val doLogin: suspend (String, String) -> Boolean = { username:String, password:String ->
+    val doLogin: suspend (String, String) -> Boolean = { username: String, password: String ->
         apiClient.login(username, password)
     }
     val onLoginSuccess = { goToMain() }
@@ -37,7 +37,7 @@ fun loginScreen(goToMain: () -> Unit) {
                         onValueChange = {
                             login = it
                         },
-                        modifier = Modifier.background(Color.Cyan),
+                        modifier = Modifier.background(Color.Cyan).width(300.dp),
                         placeholder = {
                             Text("Login")
                         }
@@ -51,7 +51,7 @@ fun loginScreen(goToMain: () -> Unit) {
                             pass = text
                         },
 
-                        modifier = Modifier.background(Color.Cyan),
+                        modifier = Modifier.background(Color.Cyan).width(300.dp),
                         placeholder = { Text("Enter new password") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
@@ -70,8 +70,17 @@ fun loginScreen(goToMain: () -> Unit) {
                             }
                         },
                     )
-                    Button(onClick = { onLoginButtonClick(login, pass, onLoginSuccess, doLogin) }, Modifier.width(100.dp)) {
-                        Text("Login")
+
+                    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.width(300.dp)) {
+                        Button(
+                            onClick = { onLoginButtonClick(login, pass, onLoginSuccess, doLogin) },
+                            Modifier.width(125.dp)
+                        ) {
+                            Text("Login")
+                        }
+                        Button(onClick = { toggleLogged(ActiveScreen.REGISTRATION) }, Modifier.width(125.dp)) {
+                            Text("Registration")
+                        }
                     }
                 }
             }
@@ -85,6 +94,7 @@ fun onLoginButtonClick(
     onSuccess: () -> Unit,
     doLogin: suspend (String, String) -> Boolean
 ) {
+
     val scope = CoroutineScope(Dispatchers.Default)
     scope.launch {
         val result = doLogin(login, pass)
@@ -92,4 +102,8 @@ fun onLoginButtonClick(
             onSuccess()
         }
     }
+}
+
+fun onRegistrationButton() {
+
 }

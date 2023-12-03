@@ -20,12 +20,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun registrationScreen(goToLogin: () -> Unit) {
+fun registrationScreen(changeScreen: (ActiveScreen) -> Unit) {
     val apiClient = ApiClientLocal.current
     val doRegistration: suspend (String, String) -> Boolean = { username:String, password:String ->
         apiClient.register(username, password)
     }
-
+    val goToLogin = {changeScreen(ActiveScreen.LOGIN)}
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Column(modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.width(280.dp)) {
@@ -37,9 +37,10 @@ fun registrationScreen(goToLogin: () -> Unit) {
                 username, onValueChange = {
                     username = it
                 },
-                modifier = Modifier.background(Color.Cyan),
-                placeholder = { Text("Egor") }
+                modifier = Modifier.background(Color.Cyan).width(300.dp),
+                placeholder = { Text("Username") }
             )
+
             var showPassword by remember {
                 mutableStateOf(false)
             }
@@ -49,8 +50,8 @@ fun registrationScreen(goToLogin: () -> Unit) {
                     pass = text
                 },
 
-                modifier = Modifier.background(Color.Cyan),
-                placeholder = { Text("Enter new password") },
+                modifier = Modifier.background(Color.Cyan).width(300.dp),
+                placeholder = { Text("Password") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = {
@@ -69,7 +70,7 @@ fun registrationScreen(goToLogin: () -> Unit) {
                 },
             )
 
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.width(280.dp)) {
+            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.width(300.dp)) {
                 Button(onClick = {
                     registration(
                         goToLogin,
@@ -79,7 +80,7 @@ fun registrationScreen(goToLogin: () -> Unit) {
                 }) {
                     Text("Sign Up")
                 }
-                Button(onClick = { goToLogin() }) {
+                Button(onClick = { changeScreen(ActiveScreen.LOGIN) }) {
                     Text("Sign In")
                 }
             }
@@ -101,5 +102,4 @@ fun registration(goToLogin: () -> Unit, doRegistration: suspend (String, String)
         }
     }
 }
-
 
