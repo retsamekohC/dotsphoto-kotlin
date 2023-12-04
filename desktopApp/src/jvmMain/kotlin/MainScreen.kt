@@ -21,7 +21,7 @@ import javax.swing.JFileChooser
 import kotlin.math.round
 
 @Composable
-fun mainScreen(logout:() -> Unit) {
+fun mainScreen(toggleLogout: (ActiveScreen) -> Unit) {
     val apiClient = ApiClientLocal.current
     var trigger by remember { mutableStateOf(false) }
     val list by produceState(listOf<Long>(), trigger) {
@@ -138,7 +138,7 @@ fun loadImage(id: Long, apiClient: ApiClient<Apache5EngineConfig>) {
     val scope = CoroutineScope(Dispatchers.Default)
     if (value == JFileChooser.APPROVE_OPTION) {
         scope.launch {
-            val bytes = apiClient.getPhotoById(id, true).content
+            val bytes = apiClient.getPhotoById(id, false).content
             val stream = FileOutputStream(fileChooser.selectedFile)
             stream.write(bytes)
             stream.flush()
