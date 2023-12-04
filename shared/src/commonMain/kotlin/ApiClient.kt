@@ -77,8 +77,12 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         return getPhotoIdsByAlbum(rootAlbum.id)
     }
 
-    suspend fun getPhotoById(id: Long): PhotoDto {
-        return httpClient.get("$API_URL/photo/$id").body<PhotoDto>()
+    suspend fun getPhotoById(id: Long, compressed: Boolean): PhotoDto {
+        return httpClient.get("$API_URL/photo/$id"){
+            url {
+                parameters["compressed"] = compressed.toString()
+            }
+        }.body<PhotoDto>()
     }
 
     @Serializable

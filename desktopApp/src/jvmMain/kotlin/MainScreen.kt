@@ -98,7 +98,7 @@ fun roundFloor(a: Float): Int {
 fun PhotoCard(id: Long) {
     val apiClient = ApiClientLocal.current
     val painter by produceState(ImageBitmap(1000, 1000), id) {
-        val bytes = apiClient.getPhotoById(id).content
+        val bytes = apiClient.getPhotoById(id, true).content
         this.value = org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap()
     }
     var visible by remember { mutableStateOf(true) }
@@ -131,7 +131,7 @@ fun loadImage(id: Long, apiClient: ApiClient<Apache5EngineConfig>) {
     val scope = CoroutineScope(Dispatchers.Default)
     if (value == JFileChooser.APPROVE_OPTION) {
         scope.launch {
-            val bytes = apiClient.getPhotoById(id).content
+            val bytes = apiClient.getPhotoById(id, false).content
             val stream = FileOutputStream(fileChooser.selectedFile)
             stream.write(bytes)
             stream.flush()
