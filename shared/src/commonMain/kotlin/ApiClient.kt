@@ -161,4 +161,12 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
 
         return responseStatus.isSuccess()
     }
+
+    suspend fun getAccessibleAlbums(): List<AlbumApiDto> {
+        return httpClient.get("$API_URL/album").body()
+    }
+
+    suspend fun getAlbumById(albumId: Long): AlbumApiDto {
+        return httpClient.get("$API_URL/album/get/$albumId").body()
+    }
 }
