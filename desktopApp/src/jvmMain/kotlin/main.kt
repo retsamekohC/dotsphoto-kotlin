@@ -36,7 +36,7 @@ class Test {
             CompositionLocalProvider(CoroutineScopeLocal provides rememberCoroutineScope()) {
                 MaterialTheme {
                     when (activeScreen) {
-                        ActiveScreen.LOGIN -> loginScreen(goToMain)
+                        ActiveScreen.LOGIN -> loginScreen(goToMain, goToRegistration)
                         ActiveScreen.MAIN -> mainScreen(goToLogin)
                         ActiveScreen.REGISTRATION -> registrationScreen(goToLogin)
                     }

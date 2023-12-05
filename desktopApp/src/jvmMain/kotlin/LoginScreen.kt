@@ -19,7 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun loginScreen(goToMain: () -> Unit) {
+fun loginScreen(goToMain: () -> Unit, goToRegistration: () -> Unit) {
     val apiClient = ApiClientLocal.current
     val doLogin: suspend (String, String) -> Boolean = { username: String, password: String ->
         apiClient.login(username, password)
@@ -78,7 +78,7 @@ fun loginScreen(goToMain: () -> Unit) {
                         ) {
                             Text("Login")
                         }
-                        Button(onClick = { toggleLogged(ActiveScreen.REGISTRATION) }, Modifier.width(125.dp)) {
+                        Button(onClick = { goToRegistration }, Modifier.width(125.dp)) {
                             Text("Registration")
                         }
                     }

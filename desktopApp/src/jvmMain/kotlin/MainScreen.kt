@@ -21,7 +21,7 @@ import javax.swing.JFileChooser
 import kotlin.math.round
 
 @Composable
-fun mainScreen(toggleLogout: (ActiveScreen) -> Unit) {
+fun mainScreen(logout: () -> Unit) {
     val apiClient = ApiClientLocal.current
     var trigger by remember { mutableStateOf(false) }
     val list by produceState(listOf<Long>(), trigger) {

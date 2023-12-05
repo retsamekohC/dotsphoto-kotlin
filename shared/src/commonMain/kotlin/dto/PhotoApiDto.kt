@@ -1,6 +1,7 @@
 package dto
 
 import com.dotsphoto.orm.enums.Statuses
+import io.ktor.http.content.*
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
@@ -18,6 +19,7 @@ data class PhotoApiDto(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
+        if (other is NullBody) return false
 
         other as PhotoApiDto
 
