@@ -26,6 +26,7 @@ fun mainScreen(toggleLogout: (ActiveScreen) -> Unit) {
     var trigger by remember { mutableStateOf(false) }
     val list by produceState(listOf<Long>(), trigger) {
         this.value = apiClient.getRootAlbumPhotoIds()
+        listOf(-1L)
     }
 
     val logoutButtonOnClick: () -> Unit = {
@@ -157,4 +158,3 @@ fun uploadButton(uploadPhoto: suspend (ByteArray, String) -> Unit) {
         }
     }
 }
-
