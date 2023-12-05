@@ -21,12 +21,11 @@ import javax.swing.JFileChooser
 import kotlin.math.round
 
 @Composable
-fun mainScreen(logout: () -> Unit) {
+fun mainScreen(logout: () -> Unit, goToAlbums: () -> Unit) {
     val apiClient = ApiClientLocal.current
     var trigger by remember { mutableStateOf(false) }
     val list by produceState(listOf<Long>(), trigger) {
         this.value = apiClient.getRootAlbumPhotoIds()
-        listOf(-1L)
     }
 
     val logoutButtonOnClick: () -> Unit = {
@@ -52,6 +51,13 @@ fun mainScreen(logout: () -> Unit) {
                     }
                 }, Modifier.width(100.dp)) {
                     Text("Upload")
+                }
+            }
+            Row(modifier = Modifier.weight(1f)) {
+                Button(
+                    onClick = goToAlbums,
+                    Modifier.width(100.dp)) {
+                    Text("Albums")
                 }
             }
             Row(modifier = Modifier.weight(10f), verticalAlignment = Alignment.Bottom) {

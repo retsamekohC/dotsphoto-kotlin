@@ -1,7 +1,10 @@
 import dto.AlbumApiDto
 import dto.PhotoApiDto
+import dto.UserApiDto
+import dto.request.bodies.AlbumAccessibleByUsers
 import dto.request.bodies.PhotoPostRequest
 import dto.request.bodies.RegisterRequest
+import dto.request.bodies.ShareRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -15,7 +18,6 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -129,5 +131,34 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
             this.credentials = null
         }
         return status.isSuccess()
+    }
+
+
+    suspend fun getMe(): UserApiDto {
+        return httpClient.get("$API_URL/user/me").body()
+    }
+    suspend fun getUsers(): List<UserApiDto> {
+        return httpClient.get("$API_URL/user").body()
+    }
+
+    suspend fun getMyAlbums(): List<AlbumApiDto> {
+        return httpClient.get("$API_URL/album/my").body()
+    }
+
+    suspend fun getAccessorToAlbum(albumId: Long): AlbumAccessibleByUsers {
+        return httpClient.get("$API_URL/ownership/accessorsToMyAlbum"){
+            url {
+                parameters["albumId"] = albumId.toString()
+            }
+        }.body()
+    }
+
+    suspend fun shareAlbum(albumId: Long, userId: Long):Boolean {
+        val responseStatus = httpClient.post("$API_URL/album/share") {
+            contentType(ContentType.Application.Json)
+            setBody(ShareRequest(userId, albumId))
+        }.status
+
+        return responseStatus.isSuccess()
     }
 }

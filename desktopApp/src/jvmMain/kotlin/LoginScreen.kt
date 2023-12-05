@@ -78,7 +78,7 @@ fun loginScreen(goToMain: () -> Unit, goToRegistration: () -> Unit) {
                         ) {
                             Text("Login")
                         }
-                        Button(onClick = { goToRegistration }, Modifier.width(125.dp)) {
+                        Button(onClick = goToRegistration , Modifier.width(125.dp)) {
                             Text("Registration")
                         }
                     }
