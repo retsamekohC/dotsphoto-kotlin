@@ -68,7 +68,7 @@ fun mainScreen(logout:() -> Unit) {
 fun PhotoCard(id: Long) {
     val apiClient = ApiClientLocal.current
     val painter by produceState(ImageBitmap(1000, 1000), id) {
-        val bytes = apiClient.getPhotoById(id).content
+        val bytes = apiClient.getPhotoById(id, true).content
         this.value = org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap()
     }
 

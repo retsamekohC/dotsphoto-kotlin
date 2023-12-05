@@ -5,7 +5,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AlbumDto(
+data class AlbumApiDto(
     val id: Long,
     val albumName: String,
     val createdAt: LocalDateTime,

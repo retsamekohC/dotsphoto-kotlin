@@ -1,14 +1,11 @@
 package dto
 
 import com.dotsphoto.orm.enums.Statuses
-import io.ktor.http.content.*
-import io.ktor.util.reflect.*
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlin.reflect.KClass
 
 @Serializable
-data class PhotoDto(
+data class PhotoApiDto(
     val id: Long,
     val content: ByteArray,
     val fileName: String,
@@ -18,13 +15,11 @@ data class PhotoDto(
     val status: Statuses,
     val albumId: Long
 ) {
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other == null || other is NullBody) {
-            return false
-        }
 
-        other as PhotoDto
+        other as PhotoApiDto
 
         if (!content.contentEquals(other.content)) return false
         if (fileName != other.fileName) return false

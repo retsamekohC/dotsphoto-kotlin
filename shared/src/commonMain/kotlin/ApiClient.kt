@@ -1,5 +1,7 @@
-import dto.AlbumDto
-import dto.PhotoDto
+import dto.AlbumApiDto
+import dto.PhotoApiDto
+import dto.request.bodies.PhotoPostRequest
+import dto.request.bodies.RegisterRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -8,7 +10,6 @@ import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.cookies.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -64,7 +65,7 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
 
     private val API_URL = "http://localhost:8080"
 
-    suspend fun getRootAlbum(): AlbumDto {
+    suspend fun getRootAlbum(): AlbumApiDto {
         return httpClient.get("$API_URL/album/root").body()
     }
 
@@ -77,12 +78,13 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         return getPhotoIdsByAlbum(rootAlbum.id)
     }
 
-    suspend fun getPhotoById(id: Long): PhotoDto {
-        return httpClient.get("$API_URL/photo/$id").body<PhotoDto>()
+    suspend fun getPhotoById(id: Long, compressed: Boolean): PhotoApiDto {
+        return httpClient.get("$API_URL/photo/$id"){
+            url {
+                parameters["compressed"] = compressed.toString()
+            }
+        }.body<PhotoApiDto>()
     }
-
-    @Serializable
-    data class PhotoPostRequest(val b64: String, val photoName: String)
 
     @OptIn(ExperimentalEncodingApi::class)
     suspend fun postPhotoToRootAlbum(photoBlob: ByteArray, photoName: String) : Boolean {
@@ -120,7 +122,7 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
     suspend fun register(username: String, password: String) : Boolean  {
         val status = httpClient.post("$API_URL/auth/register") {
             contentType(ContentType.Application.Json)
-            setBody(mapOf("name" to username, "password" to password))
+            setBody(RegisterRequest(username, password))
         }.status
 
         if (status.isSuccess()) {
