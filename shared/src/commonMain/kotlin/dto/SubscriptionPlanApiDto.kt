@@ -4,10 +4,11 @@ import com.dotsphoto.orm.enums.Statuses
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserDto(
+data class SubscriptionPlanApiDto(
     val id: Long,
-    val nickname: String?,
-    val rootAlbumId: Long,
-    val subscriptionId: Long,
+    val planName: String,
+    val availableSpaceGb: Int,
+    val periodMonths: Int,
+    val priceCop: Int,
     val status: Statuses
 )

@@ -4,7 +4,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PhotoMetadataDto(
+data class PhotoMetadataApiDto(
     val id: Long,
     val widthInPixels: Int?,
     val heightInPixels: Int?,
