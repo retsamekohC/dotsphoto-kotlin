@@ -9,6 +9,7 @@ kotlin {
         binaries.executable()
     }
     sourceSets {
+        val ktorVersion: String by project
         val jsMain by getting {
             dependencies {
                 implementation(project(":shared"))
@@ -22,6 +23,7 @@ kotlin {
                 implementation(npm("react-share", "4.4.1"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+                implementation("io.ktor:ktor-client-js:$ktorVersion")
             }
         }
     }

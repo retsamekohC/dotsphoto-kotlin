@@ -1,4 +1,7 @@
+import dto.PhotoApiDto
+import io.ktor.client.engine.js.*
 import kotlinx.browser.document
+import kotlinx.browser.localStorage
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -7,15 +10,22 @@ import kotlinx.css.properties.borderBottom
 import kotlinx.css.properties.scale
 import kotlinx.css.properties.transform
 import kotlinx.html.InputType
+import kotlinx.html.for_
+import kotlinx.html.id
 import kotlinx.html.js.onChangeFunction
+import kotlinx.html.js.onClickFunction
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Int8Array
+import org.w3c.dom.Element
 import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.Window
+import org.w3c.dom.get
 import org.w3c.files.File
 import org.w3c.files.FileReader
 import org.w3c.files.get
 import react.*
 import react.dom.render
+
 import styled.*
 
 external interface PhotoBoxProps : RProps {
@@ -140,24 +150,90 @@ object ComponentStyles : StyleSheet("ComponentStyles", isStatic = true) {
     }
 }
 
+fun valueOf(o: Element?): String?{
+    return js("o.value") as? String
+}
+
+fun textOf(o: Element?): String{
+    return js("o.text") as String
+}
+
+fun jsAlert(o: Element?):Unit{
+    js("alert(o.value)")
+}
+
 @OptIn(DelicateCoroutinesApi::class)
 fun main(): Unit = run {
+    val ApiClientLocal = ApiClient(Js)
+
+    val login = functionalComponent<RProps> {
+        styledDiv {
+            styledInput(InputType.email, name = "email") {
+                attrs {
+                    id="email"
+                }
+            }
+            styledLabel {
+                attrs {
+                    htmlFor = "email"
+                }
+                +"E-mail"
+            }
+            styledInput(InputType.password) {
+                attrs {
+                    id="password"
+                }
+            }
+            styledLabel {
+                attrs {
+                    htmlFor = "password"
+                }
+                +"Password"
+            }
+            styledButton {
+                attrs{
+                    onClickFunction = {
+                        GlobalScope.launch {
+                            val email = document.getElementById("email") as HTMLInputElement
+                            val password = document.getElementById("password") as HTMLInputElement
+
+                            if (ApiClientLocal.login(email.value, password.value)){
+                                val a =0;
+                            }
+                            else{
+                                val b =0;
+                            }
+                        }
+                    }
+                }
+                +"Sign in"
+            }
+            styledSpan {
+                +"Don't have an account yet?"
+                styledA(href = "/register") {
+                    +"Sign up"
+                }
+            }
+            css {}
+        }
+    }
+
     val app = functionalComponent<RProps> {
-        val (photosState, setPhotoState) = useState<ArrayList<String>>(ArrayList())
+        val (photosState, setPhotoState) = useState<ArrayList<PhotoApiDto>>(ArrayList())
         useEffect(emptyList()) {
             GlobalScope.launch {
-                setPhotoState(ArrayList(ApiClient.getRootAlbumPhotoIds().map { id ->
-                    ApiClient.getPhotoById(id)
+                setPhotoState(ArrayList(ApiClientLocal.getRootAlbumPhotoIds().map { id ->
+                    ApiClientLocal.getPhotoById(id, true)
                 }))
             }
         }
 
         val processImage = { imageData: ByteArray ->
             GlobalScope.launch {
-                ApiClient.postPhotoToRootAlbum(imageData)
-                ApiClient.getRootAlbumPhotoIds().forEach { id ->
+                ApiClientLocal.postPhotoToRootAlbum(imageData, "photo")
+                ApiClientLocal.getRootAlbumPhotoIds().forEach { id ->
                     val copy = ArrayList(photosState)
-                    copy.add(ApiClient.getPhotoById(id))
+                    copy.add(ApiClientLocal.getPhotoById(id, true))
                     setPhotoState(copy)
                 }
             }
@@ -241,7 +317,9 @@ fun main(): Unit = run {
                 }
 
                 child(photoBox) {
-                    attrs.photos = photosState
+                    attrs.photos = photosState.map {
+                        x->x.content.toString()
+                    }
                 }
 
                 css { +ComponentStyles.containerRowCenterSelfFill }
@@ -257,9 +335,10 @@ fun main(): Unit = run {
                 +ComponentStyles.html
             }
         }
+
     }
     render(document.getElementById("root")) {
-        child(app)
+        child(login)
     }
 }
 
