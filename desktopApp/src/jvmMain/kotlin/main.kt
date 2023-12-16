@@ -32,13 +32,13 @@ class Test {
         val goToMain = { activeScreen = ActiveScreen.MAIN }
         val goToRegistration = { activeScreen = ActiveScreen.REGISTRATION }
         val goToAlbumsScreen = { activeScreen = ActiveScreen.ALBUMS }
-
+        val goToCreateAlbumScreen = {activeScreen = ActiveScreen.CREATE_ALBUM}
         CompositionLocalProvider(ApiClientLocal provides ApiClient(Apache5)) {
             CompositionLocalProvider(CoroutineScopeLocal provides rememberCoroutineScope()) {
                 MaterialTheme {
                     when (activeScreen) {
                         ActiveScreen.LOGIN -> loginScreen(goToMain, goToRegistration)
-                        ActiveScreen.MAIN -> mainScreen(goToLogin, goToAlbumsScreen)
+                        ActiveScreen.MAIN -> mainScreen(goToLogin, goToAlbumsScreen, goToCreateAlbumScreen)
                         ActiveScreen.REGISTRATION -> registrationScreen(goToLogin)
                         ActiveScreen.ALBUMS -> albumsScreen(goToMain)
                         ActiveScreen.CREATE_ALBUM -> createAlbumScreen()

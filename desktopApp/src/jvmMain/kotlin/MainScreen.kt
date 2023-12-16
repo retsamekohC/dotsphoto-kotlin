@@ -107,7 +107,7 @@ fun albumDisplay(albumProp: AlbumApiDto?, setCurrentAlbum: (AlbumApiDto) -> Unit
     BoxWithConstraints(modifier = Modifier.fillMaxHeight().fillMaxWidth()) {
         val width = maxWidth
         val step = roundFloor(width / 200.dp)
-        val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight;
+        val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight
         Column(
             modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Cyan).verticalScroll(
                 rememberScrollState(), needScroll
@@ -227,10 +227,6 @@ fun PhotoCard(id: Long) {
         } else
             Text("$id")
     }
-}
-
-fun logOut(toggleLogout: (ActiveScreen) -> Unit) {
-    toggleLogout(ActiveScreen.LOGIN)
 }
 
 fun homeButton() {
