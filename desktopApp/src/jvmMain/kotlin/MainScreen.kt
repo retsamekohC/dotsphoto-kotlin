@@ -3,6 +3,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import dto.AlbumApiDto
 import io.ktor.client.engine.apache5.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,12 +30,24 @@ import javax.swing.JFileChooser
 import kotlin.math.round
 
 @Composable
-fun mainScreen(toggleLogout: (ActiveScreen) -> Unit) {
+fun mainScreen(logout: () -> Unit, goToAlbums: () -> Unit, goToCreateAlbums: () -> Unit) {
     val apiClient = ApiClientLocal.current
+    val scope = rememberCoroutineScope()
     var trigger by remember { mutableStateOf(false) }
-    val list by produceState(listOf<Long>(), trigger) {
-        this.value = apiClient.getRootAlbumPhotoIds()
-        listOf(-1L)
+    var currentAlbum by remember { mutableStateOf<AlbumApiDto?>(null, neverEqualPolicy()) }
+    val setCurrentAlbum = { newAlbum: AlbumApiDto ->
+        currentAlbum = newAlbum
+    }
+    
+    LaunchedEffect(null) {
+        currentAlbum = apiClient.getRootAlbum()
+    }
+
+    val logoutButtonOnClick: () -> Unit = {
+        scope.launch {
+            apiClient.logout()
+        }
+        logout()
     }
 
     Row {
@@ -53,31 +67,87 @@ fun mainScreen(toggleLogout: (ActiveScreen) -> Unit) {
                     Text("Upload")
                 }
             }
+            Row(modifier = Modifier.weight(1f)) {
+                Button(
+                    onClick = goToAlbums,
+                    Modifier.width(100.dp)
+                ) {
+                    Text("Albums")
+                }
+            }
             Row {
                 Button(onClick = {
-                    toggleLogout(ActiveScreen.CREATE_ALBUM)
+                    goToCreateAlbums()
                 }, Modifier.width(100.dp)) {
                     Text("Create album")
                 }
             }
             Row(modifier = Modifier.weight(10f), verticalAlignment = Alignment.Bottom) {
-                Button(onClick = { logOut(toggleLogout) }, Modifier.width(100.dp)) {
+                Button(onClick = { logoutButtonOnClick() }, Modifier.width(100.dp)) {
                     Text("Log out")
                 }
             }
         }
-        BoxWithConstraints(modifier = Modifier.fillMaxHeight().fillMaxWidth()) {
-            val width = maxWidth
-            val step = roundFloor(width / 200.dp)
-            val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight
-            Column(
-                modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Cyan).verticalScroll(
-                    rememberScrollState(), needScroll
-                )
-            ) {
+        albumDisplay(currentAlbum, setCurrentAlbum, trigger)
+    }
+}
 
+@Composable
+fun albumDisplay(albumProp: AlbumApiDto?, setCurrentAlbum: (AlbumApiDto) -> Unit, trigger:Boolean) {
+    val apiClient = ApiClientLocal.current
+    var list by remember(albumProp) { mutableStateOf(listOf<Long>()) }
+
+    LaunchedEffect(albumProp, trigger) {
+        if (albumProp != null) {
+            apiClient.getPhotoIdsByAlbum(albumProp.id).run {
+                list = this
+            }
+        }
+    }
+    BoxWithConstraints(modifier = Modifier.fillMaxHeight().fillMaxWidth()) {
+        val width = maxWidth
+        val step = roundFloor(width / 200.dp)
+        val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight;
+        Column(
+            modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Cyan).verticalScroll(
+                rememberScrollState(), needScroll
+            )
+        ) {
+            if (albumProp != null) {
+                albumSelect(albumProp, setCurrentAlbum)
                 for (i in list.indices step step) {
                     makePhotoCardRow(list, i, step, width)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun albumSelect(defaultAlbum: AlbumApiDto, setCurrentAlbum: (AlbumApiDto) -> Unit) {
+    val apiClient = ApiClientLocal.current
+    val options by produceState<List<AlbumApiDto>>(listOf()) {
+        value = apiClient.getAccessibleAlbums()
+    }
+    var exp by remember { mutableStateOf(false) }
+    var selectedOption by remember { mutableStateOf(defaultAlbum) }
+
+    Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
+        Box(modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.TopStart)) {
+            Text(
+                selectedOption.albumName, modifier = Modifier.fillMaxWidth().clickable(onClick = { exp = true }).background(
+                    Color.Gray
+                )
+            )
+            DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
+                options.forEach { s ->
+                    DropdownMenuItem(onClick = {
+                        setCurrentAlbum(selectedOption)
+                        selectedOption = s
+                        exp = false
+                    }) {
+                        Text(text = s.albumName)
+                    }
                 }
             }
         }
@@ -113,7 +183,7 @@ fun roundFloor(a: Float): Int {
 fun PhotoCard(id: Long) {
     val apiClient = ApiClientLocal.current
     val painter by produceState(ImageBitmap(1000, 1000), id) {
-        val bytes = apiClient.getPhotoById(id).content
+        val bytes = apiClient.getPhotoById(id, true).content
         this.value = org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap()
     }
     val visible by remember { mutableStateOf(true) }
@@ -169,12 +239,11 @@ fun homeButton() {
 
 fun downloadImage(id: Long, apiClient: ApiClient<Apache5EngineConfig>) {
     val fileChooser = JFileChooser()
-    fileChooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
     val value = fileChooser.showSaveDialog(null)
     val scope = CoroutineScope(Dispatchers.Default)
     if (value == JFileChooser.APPROVE_OPTION) {
         scope.launch {
-            val bytes = apiClient.getPhotoById(id)
+            val bytes = apiClient.getPhotoById(id, false)
             val stream = FileOutputStream("${fileChooser.selectedFile}/${bytes.fileName}")
             stream.write(bytes.content)
             stream.flush()

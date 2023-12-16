@@ -27,18 +27,20 @@ class Test {
     @Preview
     @Composable
     fun AppPreview() {
-        var activeScreen by remember { mutableStateOf(ActiveScreen.LOGIN) }
-        val changeScreen = { x: ActiveScreen ->
-            activeScreen = x
-        }
+        var activeScreen by remember { mutableStateOf(ActiveScreen.REGISTRATION) }
+        val goToLogin = { activeScreen = ActiveScreen.LOGIN }
+        val goToMain = { activeScreen = ActiveScreen.MAIN }
+        val goToRegistration = { activeScreen = ActiveScreen.REGISTRATION }
+        val goToAlbumsScreen = { activeScreen = ActiveScreen.ALBUMS }
 
         CompositionLocalProvider(ApiClientLocal provides ApiClient(Apache5)) {
             CompositionLocalProvider(CoroutineScopeLocal provides rememberCoroutineScope()) {
                 MaterialTheme {
                     when (activeScreen) {
-                        ActiveScreen.LOGIN -> loginScreen(changeScreen)
-                        ActiveScreen.MAIN -> mainScreen(changeScreen)
-                        ActiveScreen.REGISTRATION -> registrationScreen(changeScreen)
+                        ActiveScreen.LOGIN -> loginScreen(goToMain, goToRegistration)
+                        ActiveScreen.MAIN -> mainScreen(goToLogin, goToAlbumsScreen)
+                        ActiveScreen.REGISTRATION -> registrationScreen(goToLogin)
+                        ActiveScreen.ALBUMS -> albumsScreen(goToMain)
                         ActiveScreen.CREATE_ALBUM -> createAlbumScreen()
                     }
                 }

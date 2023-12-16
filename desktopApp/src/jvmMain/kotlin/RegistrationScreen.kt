@@ -20,12 +20,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun registrationScreen(changeScreen: (ActiveScreen) -> Unit) {
+fun registrationScreen(goToLogin: () -> Unit) {
     val apiClient = ApiClientLocal.current
     val doRegistration: suspend (String, String) -> Boolean = { username:String, password:String ->
         apiClient.register(username, password)
     }
-    val goToLogin = {changeScreen(ActiveScreen.LOGIN)}
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Column(modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.width(280.dp)) {
@@ -80,7 +79,7 @@ fun registrationScreen(changeScreen: (ActiveScreen) -> Unit) {
                 }) {
                     Text("Sign Up")
                 }
-                Button(onClick = { changeScreen(ActiveScreen.LOGIN) }) {
+                Button(onClick = goToLogin) {
                     Text("Sign In")
                 }
             }
@@ -88,8 +87,6 @@ fun registrationScreen(changeScreen: (ActiveScreen) -> Unit) {
     }
 }
 
-
-@Suppress("unused")
 class RegistrationData(
     var username: String,
     var pass: String
