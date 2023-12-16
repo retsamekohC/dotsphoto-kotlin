@@ -1,6 +1,8 @@
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
+import androidx.compose.material.DropdownMenu
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -9,8 +11,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.input.pointer.PointerButton
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.ktor.client.engine.apache5.*
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +53,13 @@ fun mainScreen(toggleLogout: (ActiveScreen) -> Unit) {
                     Text("Upload")
                 }
             }
+            Row {
+                Button(onClick = {
+                    toggleLogout(ActiveScreen.CREATE_ALBUM)
+                }, Modifier.width(100.dp)) {
+                    Text("Create album")
+                }
+            }
             Row(modifier = Modifier.weight(10f), verticalAlignment = Alignment.Bottom) {
                 Button(onClick = { logOut(toggleLogout) }, Modifier.width(100.dp)) {
                     Text("Log out")
@@ -55,7 +69,7 @@ fun mainScreen(toggleLogout: (ActiveScreen) -> Unit) {
         BoxWithConstraints(modifier = Modifier.fillMaxHeight().fillMaxWidth()) {
             val width = maxWidth
             val step = roundFloor(width / 200.dp)
-            val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight;
+            val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight
             Column(
                 modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Cyan).verticalScroll(
                     rememberScrollState(), needScroll
@@ -94,6 +108,7 @@ fun roundFloor(a: Float): Int {
     return x
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PhotoCard(id: Long) {
     val apiClient = ApiClientLocal.current
@@ -101,18 +116,45 @@ fun PhotoCard(id: Long) {
         val bytes = apiClient.getPhotoById(id).content
         this.value = org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap()
     }
-    var visible by remember { mutableStateOf(true) }
-    Box(modifier = Modifier.size(200.dp)) {
-        if (visible)
+    val visible by remember { mutableStateOf(true) }
+    var context by remember { mutableStateOf(false) }
+    var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
+    var height by remember { mutableStateOf(0.dp) }
+    var width by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+    Box(modifier = Modifier.onSizeChanged {
+        height = with(density) { it.height.toDp() }
+        width = with(density) { it.width.toDp() }
+    }.pointerInput(true) {
+
+        detectTapGestures(onTap = {
+            pressOffset = DpOffset(it.x.dp, it.y.dp)
+        })
+
+    }) {
+        if (visible) {
+            DropdownMenu(
+                expanded = context,
+                onDismissRequest = { context = false },
+                offset = pressOffset.copy(y = pressOffset.y / 2 - height, x = pressOffset.x / 2 - width)
+            ) {
+                Text("Загрузить фотографию", modifier = Modifier.clickable { downloadImage(id, apiClient) })
+                Text("Удалить фотографию", modifier = Modifier.clickable { deletePhoto() })
+                Text("Переместить фотографию в другой альбом", modifier = Modifier.clickable { movePhoto() })
+            }
             Image(
                 BitmapPainter(painter),
                 null,
-                modifier = Modifier.background(Color.Black).size(200.dp).clickable {
-                    loadImage(id, apiClient)
+                modifier = Modifier.background(Color.Black).size(200.dp).onClick(
+                    matcher = PointerMatcher.mouse(
+                        PointerButton.Secondary
+                    )
+                ) {
+                    context = true
                 },
                 contentScale = ContentScale.FillBounds,
             )
-        else
+        } else
             Text("$id")
     }
 }
@@ -125,15 +167,16 @@ fun homeButton() {
 
 }
 
-fun loadImage(id: Long, apiClient: ApiClient<Apache5EngineConfig>) {
+fun downloadImage(id: Long, apiClient: ApiClient<Apache5EngineConfig>) {
     val fileChooser = JFileChooser()
+    fileChooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
     val value = fileChooser.showSaveDialog(null)
     val scope = CoroutineScope(Dispatchers.Default)
     if (value == JFileChooser.APPROVE_OPTION) {
         scope.launch {
-            val bytes = apiClient.getPhotoById(id).content
-            val stream = FileOutputStream(fileChooser.selectedFile)
-            stream.write(bytes)
+            val bytes = apiClient.getPhotoById(id)
+            val stream = FileOutputStream("${fileChooser.selectedFile}/${bytes.fileName}")
+            stream.write(bytes.content)
             stream.flush()
             stream.close()
         }
@@ -149,4 +192,12 @@ fun uploadButton(uploadPhoto: suspend (ByteArray, String) -> Unit) {
             uploadPhoto(fileChooser.selectedFile.readBytes(), fileChooser.selectedFile.name)
         }
     }
+}
+
+fun movePhoto() {
+
+}
+
+fun deletePhoto() {
+
 }

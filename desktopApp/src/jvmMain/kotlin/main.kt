@@ -1,23 +1,13 @@
 @file:OptIn(ExperimentalEncodingApi::class)
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowSize
-import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import io.ktor.client.*
 import io.ktor.client.engine.apache5.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 
@@ -49,20 +39,10 @@ class Test {
                         ActiveScreen.LOGIN -> loginScreen(changeScreen)
                         ActiveScreen.MAIN -> mainScreen(changeScreen)
                         ActiveScreen.REGISTRATION -> registrationScreen(changeScreen)
+                        ActiveScreen.CREATE_ALBUM -> createAlbumScreen()
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun TestScreen() {
-    BoxWithConstraints(){
-        val m = maxHeight
-        Row {
-            //Text("width = $maxWidth")
-            Text("height = $m")
         }
     }
 }
