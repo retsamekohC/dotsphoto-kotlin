@@ -27,7 +27,7 @@ class Test {
     @Preview
     @Composable
     fun AppPreview() {
-        var activeScreen by remember { mutableStateOf(ActiveScreen.REGISTRATION) }
+        var activeScreen by remember { mutableStateOf(ActiveScreen.LOGIN) }
         val goToLogin = { activeScreen = ActiveScreen.LOGIN }
         val goToMain = { activeScreen = ActiveScreen.MAIN }
         val goToRegistration = { activeScreen = ActiveScreen.REGISTRATION }
@@ -41,7 +41,7 @@ class Test {
                         ActiveScreen.MAIN -> mainScreen(goToLogin, goToAlbumsScreen, goToCreateAlbumScreen)
                         ActiveScreen.REGISTRATION -> registrationScreen(goToLogin)
                         ActiveScreen.ALBUMS -> albumsScreen(goToMain)
-                        ActiveScreen.CREATE_ALBUM -> createAlbumScreen()
+                        ActiveScreen.CREATE_ALBUM -> createAlbumScreen(goToMain)
                     }
                 }
             }

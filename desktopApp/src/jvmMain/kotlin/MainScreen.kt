@@ -17,10 +17,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.*
 import dto.AlbumApiDto
+import dto.PhotoApiDto
 import io.ktor.client.engine.apache5.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +38,7 @@ fun mainScreen(logout: () -> Unit, goToAlbums: () -> Unit, goToCreateAlbums: () 
     val setCurrentAlbum = { newAlbum: AlbumApiDto ->
         currentAlbum = newAlbum
     }
-    
+
     LaunchedEffect(null) {
         currentAlbum = apiClient.getRootAlbum()
     }
@@ -51,40 +51,45 @@ fun mainScreen(logout: () -> Unit, goToAlbums: () -> Unit, goToCreateAlbums: () 
     }
 
     Row {
-        Column(Modifier) {
-            Row(modifier = Modifier.weight(1f)) {
-                Button(onClick = { homeButton() }, Modifier.width(100.dp)) {
-                    Text("Home")
+        Column(
+            Modifier.width(145.dp).background(Color(75, 255, 255)).fillMaxHeight().fillMaxWidth()
+        ) {
+            Row(modifier = Modifier.height(60.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Button(onClick = { homeButton() }, Modifier.width(135.dp).height(40.dp)) {
+                    Text("Home", fontSize = TextUnit(1f, TextUnitType.Em))
                 }
             }
-            Row(modifier = Modifier.weight(1f)) {
+            Row(modifier = Modifier.height(60.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button(onClick = {
                     uploadButton { bytes: ByteArray, name: String ->
                         apiClient.postPhotoToRootAlbum(bytes, name)
                         trigger = !trigger
                     }
-                }, Modifier.width(100.dp)) {
-                    Text("Upload")
+                }, Modifier.width(135.dp).height(40.dp)) {
+                    Text("Upload", fontSize = TextUnit(1f, TextUnitType.Em))
                 }
             }
-            Row(modifier = Modifier.weight(1f)) {
+            Row(modifier = Modifier.height(60.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button(
-                    onClick = goToAlbums,
-                    Modifier.width(100.dp)
+                    onClick = goToAlbums, Modifier.width(135.dp).height(40.dp)
                 ) {
-                    Text("Albums")
+                    Text("Albums", fontSize = TextUnit(1f, TextUnitType.Em))
                 }
             }
-            Row {
+            Row(Modifier.height(60.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button(onClick = {
                     goToCreateAlbums()
-                }, Modifier.width(100.dp)) {
-                    Text("Create album")
+                }, Modifier.width(135.dp).height(80.dp)) {
+                    Text("Create album", fontSize = TextUnit(1f, TextUnitType.Em), textAlign = TextAlign.Center)
                 }
             }
-            Row(modifier = Modifier.weight(10f), verticalAlignment = Alignment.Bottom) {
-                Button(onClick = { logoutButtonOnClick() }, Modifier.width(100.dp)) {
-                    Text("Log out")
+            Row(
+                modifier = Modifier.height(60.dp).fillMaxWidth().weight(1.1f),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Button(onClick = { logoutButtonOnClick() }, Modifier.width(135.dp).height(40.dp)) {
+                    Text("Log out", fontSize = TextUnit(1f, TextUnitType.Em))
                 }
             }
         }
@@ -93,7 +98,7 @@ fun mainScreen(logout: () -> Unit, goToAlbums: () -> Unit, goToCreateAlbums: () 
 }
 
 @Composable
-fun albumDisplay(albumProp: AlbumApiDto?, setCurrentAlbum: (AlbumApiDto) -> Unit, trigger:Boolean) {
+fun albumDisplay(albumProp: AlbumApiDto?, setCurrentAlbum: (AlbumApiDto) -> Unit, trigger: Boolean) {
     val apiClient = ApiClientLocal.current
     var list by remember(albumProp) { mutableStateOf(listOf<Long>()) }
 
@@ -109,9 +114,9 @@ fun albumDisplay(albumProp: AlbumApiDto?, setCurrentAlbum: (AlbumApiDto) -> Unit
         val step = roundFloor(width / 200.dp)
         val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight
         Column(
-            modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Cyan).verticalScroll(
-                rememberScrollState(), needScroll
-            )
+            modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color(200, 255, 255)).verticalScroll(
+                    rememberScrollState(), needScroll
+                )
         ) {
             if (albumProp != null) {
                 albumSelect(albumProp, setCurrentAlbum)
@@ -133,12 +138,16 @@ fun albumSelect(defaultAlbum: AlbumApiDto, setCurrentAlbum: (AlbumApiDto) -> Uni
     var selectedOption by remember { mutableStateOf(defaultAlbum) }
 
     Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
-        Box(modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.TopStart)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+
             Text(
-                selectedOption.albumName, modifier = Modifier.fillMaxWidth().clickable(onClick = { exp = true }).background(
-                    Color.Gray
-                )
+                selectedOption.albumName,
+                fontSize = TextUnit(1.5f, TextUnitType.Em),
+                color = Color(110, 20, 239),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable(onClick = { exp = true })
             )
+
             DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
                 options.forEach { s ->
                     DropdownMenuItem(onClick = {
@@ -146,7 +155,7 @@ fun albumSelect(defaultAlbum: AlbumApiDto, setCurrentAlbum: (AlbumApiDto) -> Uni
                         selectedOption = s
                         exp = false
                     }) {
-                        Text(text = s.albumName)
+                        Text(text = s.albumName, fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
                     }
                 }
             }
@@ -166,15 +175,13 @@ fun makePhotoCardRow(list: List<Long>, offset: Int, number: Int, width: Dp) {
 
 fun roundCeil(a: Float): Int {
     val x = round(a).toInt()
-    if (x < a)
-        return x + 1
+    if (x < a) return x + 1
     return x
 }
 
 fun roundFloor(a: Float): Int {
     val x = round(a).toInt()
-    if (x > a)
-        return x - 1
+    if (x > a) return x - 1
     return x
 }
 
@@ -182,10 +189,18 @@ fun roundFloor(a: Float): Int {
 @Composable
 fun PhotoCard(id: Long) {
     val apiClient = ApiClientLocal.current
-    val painter by produceState(ImageBitmap(1000, 1000), id) {
-        val bytes = apiClient.getPhotoById(id, true).content
-        this.value = org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap()
+    val scope = rememberCoroutineScope()
+    val photo by produceState<PhotoApiDto?>(null, id) {
+        this.value = apiClient.getPhotoById(id, true)
     }
+    val painter by produceState(ImageBitmap(1000, 1000), photo) {
+        if (photo != null) {
+            val bytes = photo!!.content
+            this.value = org.jetbrains.skia.Image.makeFromEncoded(bytes).toComposeImageBitmap()
+        }
+    }
+    var copyVisible by remember { mutableStateOf(false) }
+    var moveVisible by remember { mutableStateOf(false) }
     val visible by remember { mutableStateOf(true) }
     var context by remember { mutableStateOf(false) }
     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
@@ -208,24 +223,53 @@ fun PhotoCard(id: Long) {
                 onDismissRequest = { context = false },
                 offset = pressOffset.copy(y = pressOffset.y / 2 - height, x = pressOffset.x / 2 - width)
             ) {
-                Text("Загрузить фотографию", modifier = Modifier.clickable { downloadImage(id, apiClient) })
-                Text("Удалить фотографию", modifier = Modifier.clickable { deletePhoto() })
-                Text("Переместить фотографию в другой альбом", modifier = Modifier.clickable { movePhoto() })
+                Text(
+                    "Download photo",
+                    modifier = Modifier.clickable { downloadImage(id, apiClient) },
+                    fontSize = TextUnit(1f, TextUnitType.Em),
+                    color = Color(110, 20, 239)
+                )
+                Text("Delete photo", modifier = Modifier.clickable {
+                    scope.launch {
+                        deletePhoto(
+                            apiClient, photoId = id, albumId = photo!!.albumId
+                        )
+                    }
+                }, fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
+                MyButton(
+                    moveVisible,
+                    onButtonClick = { moveVisible = true },
+                    close = { moveVisible = false },
+                    "Move photo to album",
+                    id
+                ) { photoId: Long, albumId: Long ->
+                    scope.launch { apiClient.movePhotoToAlbum(photoId, albumId) }
+                }
+                MyButton(
+                    copyVisible,
+                    onButtonClick = { copyVisible = true },
+                    close = { copyVisible = false },
+                    "Copy photo to album",
+                    id
+                ) { photoId: Long, albumId: Long ->
+                    scope.launch { apiClient.copyPhotoToAlbum(photoId, albumId) }
+                }
             }
             Image(
                 BitmapPainter(painter),
                 null,
-                modifier = Modifier.background(Color.Black).size(200.dp).onClick(
-                    matcher = PointerMatcher.mouse(
-                        PointerButton.Secondary
-                    )
-                ) {
-                    context = true
-                },
+                modifier = Modifier
+                    //.background(Color.Black).size(200.dp)
+                    .onClick(
+                        matcher = PointerMatcher.mouse(
+                            PointerButton.Secondary
+                        )
+                    ) {
+                        context = true
+                    },
                 contentScale = ContentScale.FillBounds,
             )
-        } else
-            Text("$id")
+        } else Text("$id", fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
     }
 }
 
@@ -259,10 +303,37 @@ fun uploadButton(uploadPhoto: suspend (ByteArray, String) -> Unit) {
     }
 }
 
-fun movePhoto() {
-
+suspend fun deletePhoto(apiClient: ApiClient<Apache5EngineConfig>, photoId: Long, albumId: Long) {
+    apiClient.removePhotoFromAlbum(photoId, albumId)
 }
 
-fun deletePhoto() {
+@Composable
+fun PhotoMenu(isOpen: Boolean, photoId: Long, close: () -> Unit, onClick: (photoId: Long, albumId: Long) -> Unit) {
+    val apiClient = ApiClientLocal.current
+    val albums by produceState<List<AlbumApiDto>>(emptyList(), isOpen) {
+        this.value = apiClient.getMyAlbums()
+    }
+    DropdownMenu(expanded = isOpen, onDismissRequest = close) {
+        for (i in albums) DropdownMenuItem(onClick = { onClick(photoId, i.id) }) {
+            Text(i.albumName, fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
+        }
+    }
+}
 
+@Composable
+fun MyButton(
+    copyVisible: Boolean,
+    onButtonClick: () -> Unit,
+    close: () -> Unit,
+    text: String,
+    id: Long,
+    onClick: (photoId: Long, albumId: Long) -> Unit
+) {
+    Text(
+        text,
+        modifier = Modifier.clickable { onButtonClick() },
+        fontSize = TextUnit(1f, TextUnitType.Em),
+        color = Color(110, 20, 239)
+    )
+    PhotoMenu(copyVisible, id, close, onClick)
 }

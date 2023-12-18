@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,9 +26,9 @@ fun registrationScreen(goToLogin: () -> Unit) {
     val doRegistration: suspend (String, String) -> Boolean = { username:String, password:String ->
         apiClient.register(username, password)
     }
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    Row(modifier = Modifier.fillMaxWidth().background(Color(200,255,255)), horizontalArrangement = Arrangement.Center) {
         Column(modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.width(280.dp)) {
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.width(300.dp)) {
                 Text("Welcome", fontSize = TextUnit(2f, TextUnitType.Em), color = Color(110, 20, 239))
             }
             var username by remember { mutableStateOf("") }
@@ -36,7 +37,7 @@ fun registrationScreen(goToLogin: () -> Unit) {
                 username, onValueChange = {
                     username = it
                 },
-                modifier = Modifier.background(Color.Cyan).width(300.dp),
+                modifier = Modifier.background(Color(75, 255, 255)).width(300.dp),
                 placeholder = { Text("Username") }
             )
 
@@ -49,7 +50,7 @@ fun registrationScreen(goToLogin: () -> Unit) {
                     pass = text
                 },
 
-                modifier = Modifier.background(Color.Cyan).width(300.dp),
+                modifier = Modifier.background(Color(75, 255, 255)).width(300.dp),
                 placeholder = { Text("Password") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
@@ -69,18 +70,18 @@ fun registrationScreen(goToLogin: () -> Unit) {
                 },
             )
 
-            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.width(300.dp)) {
+            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.width(300.dp).height(60.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(onClick = {
                     registration(
                         goToLogin,
                         doRegistration,
                         RegistrationData(username, pass)
                     )
-                }) {
-                    Text("Sign Up")
+                },Modifier.width(135.dp).height(40.dp)) {
+                    Text("Sign Up",fontSize = TextUnit(1f, TextUnitType.Em))
                 }
-                Button(onClick = goToLogin) {
-                    Text("Sign In")
+                Button(onClick = goToLogin, Modifier.width(135.dp).height(40.dp)) {
+                    Text("Sign In",fontSize = TextUnit(1f, TextUnitType.Em))
                 }
             }
         }

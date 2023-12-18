@@ -1,4 +1,4 @@
-import com.dotsphoto.api.controllers.dto.request.bodies.NewAlbumRequest
+import dto.request.bodies.NewAlbumRequest
 import dto.AlbumApiDto
 import dto.PhotoApiDto
 import dto.UserApiDto
@@ -23,7 +23,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 data class Credentials(val username: String, val password: String) {
     @OptIn(ExperimentalEncodingApi::class)
     fun getB64(): String {
-        return Base64.encode("$username:$password".toByteArray(Charsets.UTF_8));
+        return Base64.encode("$username:$password".toByteArray(Charsets.UTF_8))
     }
 }
 
@@ -56,7 +56,10 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
             install(Auth) {
                 basic {
                     credentials {
-                        BasicAuthCredentials(username = credentials?.username ?: "", password = credentials?.password ?: "")
+                        BasicAuthCredentials(
+                            username = credentials?.username ?: "",
+                            password = credentials?.password ?: ""
+                        )
                     }
                 }
             }
@@ -79,19 +82,19 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
     }
 
     suspend fun getPhotoById(id: Long, compressed: Boolean): PhotoApiDto {
-        return httpClient.get("$API_URL/photo/$id"){
+        return httpClient.get("$API_URL/photo/$id") {
             url {
                 parameters["compressed"] = compressed.toString()
             }
         }.body<PhotoApiDto>()
     }
 
-    suspend fun postPhotoToRootAlbum(photoBlob: ByteArray, photoName: String) : Boolean {
+    suspend fun postPhotoToRootAlbum(photoBlob: ByteArray, photoName: String): Boolean {
         return postPhotoToAlbum(photoBlob, photoName, getRootAlbum().id)
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    suspend fun postPhotoToAlbum(photoBlob: ByteArray, photoName: String, albumId: Long) : Boolean {
+    suspend fun postPhotoToAlbum(photoBlob: ByteArray, photoName: String, albumId: Long): Boolean {
         val b64 = Base64.encode(photoBlob)
         val status = httpClient.post("$API_URL/photo") {
             contentType(ContentType.Application.Json)
@@ -116,7 +119,7 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         return response.status.isSuccess()
     }
 
-    suspend fun logout() : Boolean  {
+    suspend fun logout(): Boolean {
         val status = httpClient.post("$API_URL/auth/logout").status
         if (status.isSuccess()) {
             this.credentials = null
@@ -124,7 +127,7 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         return status.isSuccess()
     }
 
-    suspend fun register(username: String, password: String) : Boolean  {
+    suspend fun register(username: String, password: String): Boolean {
         val status = httpClient.post("$API_URL/auth/register") {
             contentType(ContentType.Application.Json)
             setBody(RegisterRequest(username, password))
@@ -140,23 +143,27 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
     suspend fun getMe(): UserApiDto {
         return httpClient.get("$API_URL/user/me").body()
     }
+
     suspend fun getUsers(): List<UserApiDto> {
         return httpClient.get("$API_URL/user").body()
     }
 
+    /**
+     * Получает все альбомы, в которых пользователь - владелец
+     */
     suspend fun getMyAlbums(): List<AlbumApiDto> {
         return httpClient.get("$API_URL/album/my").body()
     }
 
     suspend fun getAccessorToAlbum(albumId: Long): AlbumAccessibleByUsers {
-        return httpClient.get("$API_URL/ownership/accessorsToMyAlbum"){
+        return httpClient.get("$API_URL/ownership/accessorsToMyAlbum") {
             url {
                 parameters["albumId"] = albumId.toString()
             }
         }.body()
     }
 
-    suspend fun shareAlbum(albumId: Long, userId: Long):Boolean {
+    suspend fun shareAlbum(albumId: Long, userId: Long): Boolean {
         val responseStatus = httpClient.post("$API_URL/album/share") {
             contentType(ContentType.Application.Json)
             setBody(ShareRequest(userId, albumId))
@@ -189,6 +196,10 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         return responseStatus.isSuccess()
     }
 
+
+    /**
+     * Удаляет фото из альбома.
+     */
     suspend fun removePhotoFromAlbum(photoId: Long, albumId: Long): Boolean {
         val responseStatus = httpClient.post("$API_URL/photo/removeFromAlbum") {
             contentType(ContentType.Application.Json)
@@ -198,6 +209,9 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         return responseStatus.isSuccess()
     }
 
+    /**
+     * Перемещает фото в указанный альбом. Аргументом указывается айди фото и целевой альбом. Удаляет фото из изначального альбома.
+     */
     suspend fun movePhotoToAlbum(photoId: Long, albumId: Long): Boolean {
         val responseStatus = httpClient.post("$API_URL/photo/moveToAlbum") {
             contentType(ContentType.Application.Json)
@@ -207,6 +221,9 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         return responseStatus.isSuccess()
     }
 
+    /**
+     * Копирование фото в альбом. Аргумнетом указывается айди фото и целевой альбом. Не удаляет фото из изначального альбома.
+     */
     suspend fun copyPhotoToAlbum(photoId: Long, albumId: Long): Boolean {
         val responseStatus = httpClient.post("$API_URL/photo/copyToAlbum") {
             contentType(ContentType.Application.Json)
