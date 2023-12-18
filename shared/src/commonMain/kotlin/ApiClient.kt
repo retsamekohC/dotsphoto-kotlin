@@ -1,10 +1,8 @@
+import com.dotsphoto.api.controllers.dto.request.bodies.NewAlbumRequest
 import dto.AlbumApiDto
 import dto.PhotoApiDto
 import dto.UserApiDto
-import dto.request.bodies.AlbumAccessibleByUsers
-import dto.request.bodies.PhotoPostRequest
-import dto.request.bodies.RegisterRequest
-import dto.request.bodies.ShareRequest
+import dto.request.bodies.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -88,12 +86,16 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
         }.body<PhotoApiDto>()
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     suspend fun postPhotoToRootAlbum(photoBlob: ByteArray, photoName: String) : Boolean {
+        return postPhotoToAlbum(photoBlob, photoName, getRootAlbum().id)
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    suspend fun postPhotoToAlbum(photoBlob: ByteArray, photoName: String, albumId: Long) : Boolean {
         val b64 = Base64.encode(photoBlob)
         val status = httpClient.post("$API_URL/photo") {
             contentType(ContentType.Application.Json)
-            setBody(PhotoPostRequest(b64, photoName))
+            setBody(PhotoPostRequest(b64, photoName, albumId))
         }.status
         return status.isSuccess()
     }
@@ -106,6 +108,7 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
             }
         }
         if (response.status.isSuccess()) {
+
             this.credentials = creds
         } else {
             this.credentials = null
@@ -168,5 +171,48 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
 
     suspend fun getAlbumById(albumId: Long): AlbumApiDto {
         return httpClient.get("$API_URL/album/get/$albumId").body()
+    }
+
+    suspend fun createAlbum(albumName: String): AlbumApiDto {
+        return httpClient.post("$API_URL/album/new") {
+            contentType(ContentType.Application.Json)
+            setBody(NewAlbumRequest(albumName))
+        }.body()
+    }
+
+    suspend fun removeAlbum(albumId: Long): Boolean {
+        val responseStatus = httpClient.post("$API_URL/album/remove") {
+            contentType(ContentType.Application.Json)
+            setBody(RemoveAlbumRequest(albumId))
+        }.status
+
+        return responseStatus.isSuccess()
+    }
+
+    suspend fun removePhotoFromAlbum(photoId: Long, albumId: Long): Boolean {
+        val responseStatus = httpClient.post("$API_URL/photo/removeFromAlbum") {
+            contentType(ContentType.Application.Json)
+            setBody(RemovePhotoRequest(photoId, albumId))
+        }.status
+
+        return responseStatus.isSuccess()
+    }
+
+    suspend fun movePhotoToAlbum(photoId: Long, albumId: Long): Boolean {
+        val responseStatus = httpClient.post("$API_URL/photo/moveToAlbum") {
+            contentType(ContentType.Application.Json)
+            setBody(MovePhotoRequest(photoId, albumId))
+        }.status
+
+        return responseStatus.isSuccess()
+    }
+
+    suspend fun copyPhotoToAlbum(photoId: Long, albumId: Long): Boolean {
+        val responseStatus = httpClient.post("$API_URL/photo/copyToAlbum") {
+            contentType(ContentType.Application.Json)
+            setBody(CopyPhotoRequest(photoId, albumId))
+        }.status
+
+        return responseStatus.isSuccess()
     }
 }
