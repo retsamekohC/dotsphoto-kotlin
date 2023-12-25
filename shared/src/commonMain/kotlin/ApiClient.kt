@@ -66,7 +66,7 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
             install(HttpCookies)
         }
 
-    private val API_URL = "http://localhost:8080"
+    private val API_URL = "http://158.160.103.192:8080"
 
     suspend fun getRootAlbum(): AlbumApiDto {
         return httpClient.get("$API_URL/album/root").body()

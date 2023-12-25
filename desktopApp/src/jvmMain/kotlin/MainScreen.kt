@@ -136,6 +136,9 @@ fun albumSelect(defaultAlbum: AlbumApiDto, setCurrentAlbum: (AlbumApiDto) -> Uni
     }
     var exp by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf(defaultAlbum) }
+    LaunchedEffect(selectedOption) {
+        setCurrentAlbum(selectedOption)
+    }
 
     Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -151,7 +154,6 @@ fun albumSelect(defaultAlbum: AlbumApiDto, setCurrentAlbum: (AlbumApiDto) -> Uni
             DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
                 options.forEach { s ->
                     DropdownMenuItem(onClick = {
-                        setCurrentAlbum(selectedOption)
                         selectedOption = s
                         exp = false
                     }) {
@@ -259,7 +261,7 @@ fun PhotoCard(id: Long) {
                 BitmapPainter(painter),
                 null,
                 modifier = Modifier
-                    //.background(Color.Black).size(200.dp)
+                    .background(Color.Transparent).size(200.dp)
                     .onClick(
                         matcher = PointerMatcher.mouse(
                             PointerButton.Secondary
