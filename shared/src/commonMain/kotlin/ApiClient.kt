@@ -1,4 +1,3 @@
-import dto.request.bodies.NewAlbumRequest
 import dto.AlbumApiDto
 import dto.PhotoApiDto
 import dto.UserApiDto
@@ -9,6 +8,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.cache.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
@@ -64,6 +64,7 @@ class ApiClient<T : HttpClientEngineConfig>(httpClientEngineFactory: HttpClientE
                 }
             }
             install(HttpCookies)
+            install(HttpCache)
         }
 
     private val API_URL = "http://158.160.103.192:8080"
