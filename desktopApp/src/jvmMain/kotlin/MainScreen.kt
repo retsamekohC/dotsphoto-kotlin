@@ -24,6 +24,7 @@ import dto.PhotoApiDto
 import io.ktor.client.engine.apache5.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.FileOutputStream
 import javax.swing.JFileChooser
@@ -69,11 +70,12 @@ fun mainScreen(logout: () -> Unit, goToAlbums: () -> Unit, goToCreateAlbums: () 
                     Text("Upload", fontSize = TextUnit(1f, TextUnitType.Em))
                 }
             }
-            Row(modifier = Modifier.height(60.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Row(modifier = Modifier.height(80.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button(
-                    onClick = goToAlbums, Modifier.width(135.dp).height(40.dp)
+                    onClick = goToAlbums,
+                    Modifier.width(135.dp).height(60.dp)
                 ) {
-                    Text("Albums", fontSize = TextUnit(1f, TextUnitType.Em))
+                    Text("Share album", fontSize = TextUnit(1f, TextUnitType.Em), textAlign = TextAlign.Center)
                 }
             }
             Row(Modifier.height(60.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -103,9 +105,18 @@ fun albumDisplay(albumProp: AlbumApiDto?, setCurrentAlbum: (AlbumApiDto) -> Unit
     var list by remember(albumProp) { mutableStateOf(listOf<Long>()) }
 
     LaunchedEffect(albumProp, trigger) {
-        if (albumProp != null) {
-            apiClient.getPhotoIdsByAlbum(albumProp.id).run {
-                list = this
+        if (albumProp != null) apiClient.getPhotoIdsByAlbum(albumProp.id).run {
+            list = this
+        }
+    }
+    val scope = rememberCoroutineScope()
+
+    val needReload = {
+        scope.launch {
+            if (albumProp != null) {
+                apiClient.getPhotoIdsByAlbum(albumProp.id).run {
+                    list = this
+                }
             }
         }
     }
@@ -115,13 +126,13 @@ fun albumDisplay(albumProp: AlbumApiDto?, setCurrentAlbum: (AlbumApiDto) -> Unit
         val needScroll = 200.dp.times(roundCeil(list.size.toFloat() / step)) > maxHeight
         Column(
             modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color(200, 255, 255)).verticalScroll(
-                    rememberScrollState(), needScroll
-                )
+                rememberScrollState(), needScroll
+            )
         ) {
             if (albumProp != null) {
                 albumSelect(albumProp, setCurrentAlbum)
                 for (i in list.indices step step) {
-                    makePhotoCardRow(list, i, step, width)
+                    makePhotoCardRow(list, i, step, width, needReload)
                 }
             }
         }
@@ -142,22 +153,27 @@ fun albumSelect(defaultAlbum: AlbumApiDto, setCurrentAlbum: (AlbumApiDto) -> Uni
 
     Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-
-            Text(
-                selectedOption.albumName,
-                fontSize = TextUnit(1.5f, TextUnitType.Em),
-                color = Color(110, 20, 239),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.clickable(onClick = { exp = true })
-            )
-
-            DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
-                options.forEach { s ->
-                    DropdownMenuItem(onClick = {
-                        selectedOption = s
-                        exp = false
-                    }) {
-                        Text(text = s.albumName, fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
+            Box {
+                Text(
+                    selectedOption.albumName,
+                    fontSize = TextUnit(1.5f, TextUnitType.Em),
+                    color = Color(110, 20, 239),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.clickable(onClick = { exp = true })
+                )
+                DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
+                    options.forEach { s ->
+                        DropdownMenuItem(onClick = {
+                            setCurrentAlbum(selectedOption)
+                            selectedOption = s
+                            exp = false
+                        }) {
+                            Text(
+                                text = s.albumName,
+                                fontSize = TextUnit(1f, TextUnitType.Em),
+                                color = Color(110, 20, 239)
+                            )
+                        }
                     }
                 }
             }
@@ -167,10 +183,10 @@ fun albumSelect(defaultAlbum: AlbumApiDto, setCurrentAlbum: (AlbumApiDto) -> Uni
 
 
 @Composable
-fun makePhotoCardRow(list: List<Long>, offset: Int, number: Int, width: Dp) {
+fun makePhotoCardRow(list: List<Long>, offset: Int, number: Int, width: Dp, needReload: () -> Job) {
     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.width(width)) {
         list.subList(offset, offset + minOf(number, list.size - offset)).map { id ->
-            PhotoCard(id)
+            PhotoCard(id, needReload)
         }
     }
 }
@@ -189,7 +205,7 @@ fun roundFloor(a: Float): Int {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PhotoCard(id: Long) {
+fun PhotoCard(id: Long, needReload: () -> Job) {
     val apiClient = ApiClientLocal.current
     val scope = rememberCoroutineScope()
     val photo by produceState<PhotoApiDto?>(null, id) {
@@ -220,57 +236,75 @@ fun PhotoCard(id: Long) {
 
     }) {
         if (visible) {
-            DropdownMenu(
-                expanded = context,
-                onDismissRequest = { context = false },
-                offset = pressOffset.copy(y = pressOffset.y / 2 - height, x = pressOffset.x / 2 - width)
-            ) {
-                Text(
-                    "Download photo",
-                    modifier = Modifier.clickable { downloadImage(id, apiClient) },
-                    fontSize = TextUnit(1f, TextUnitType.Em),
-                    color = Color(110, 20, 239)
+            Box {
+                Image(
+                    BitmapPainter(painter),
+                    null,
+                    modifier = Modifier.background(Color.Transparent)
+                        .size(200.dp)
+                        .onClick(
+                            matcher = PointerMatcher.mouse(
+                                PointerButton.Secondary
+                            )
+                        ) {
+                            context = true
+                        },
+                    contentScale = ContentScale.FillBounds,
                 )
-                Text("Delete photo", modifier = Modifier.clickable {
-                    scope.launch {
-                        deletePhoto(
-                            apiClient, photoId = id, albumId = photo!!.albumId
-                        )
+                DropdownMenu(
+                    expanded = context,
+                    onDismissRequest = { context = false },
+
+                    ) {
+                    Text(
+                        "Download photo",
+                        modifier = Modifier.clickable {
+                            downloadImage(id, apiClient)
+                            context = false
+                        },
+                        fontSize = TextUnit(1f, TextUnitType.Em),
+                        color = Color(110, 20, 239)
+                    )
+                    Text("Delete photo", modifier = Modifier.clickable {
+                        scope.launch {
+                            deletePhoto(
+                                apiClient, photoId = id, albumId = photo!!.albumId
+                            )
+                            needReload()
+                            context = false
+                        }
+                    }, fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
+                    MyButton(
+                        moveVisible,
+                        onButtonClick = { moveVisible = true },
+                        close = { moveVisible = false },
+                        "Move photo to album",
+                        id
+                    ) { photoId: Long, albumId: Long ->
+                        scope.launch {
+                            apiClient.movePhotoToAlbum(photoId, albumId)
+                            needReload()
+                            moveVisible = false
+                            context = false
+                        }
                     }
-                }, fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
-                MyButton(
-                    moveVisible,
-                    onButtonClick = { moveVisible = true },
-                    close = { moveVisible = false },
-                    "Move photo to album",
-                    id
-                ) { photoId: Long, albumId: Long ->
-                    scope.launch { apiClient.movePhotoToAlbum(photoId, albumId) }
-                }
-                MyButton(
-                    copyVisible,
-                    onButtonClick = { copyVisible = true },
-                    close = { copyVisible = false },
-                    "Copy photo to album",
-                    id
-                ) { photoId: Long, albumId: Long ->
-                    scope.launch { apiClient.copyPhotoToAlbum(photoId, albumId) }
+                    MyButton(
+                        copyVisible,
+                        onButtonClick = { copyVisible = true },
+                        close = { copyVisible = false },
+                        "Copy photo to album",
+                        id
+                    ) { photoId: Long, albumId: Long ->
+                        scope.launch {
+                            apiClient.copyPhotoToAlbum(photoId, albumId)
+                            needReload()
+                            copyVisible = false
+                            context = false
+                        }
+                    }
                 }
             }
-            Image(
-                BitmapPainter(painter),
-                null,
-                modifier = Modifier
-                    .background(Color.Transparent).size(200.dp)
-                    .onClick(
-                        matcher = PointerMatcher.mouse(
-                            PointerButton.Secondary
-                        )
-                    ) {
-                        context = true
-                    },
-                contentScale = ContentScale.FillBounds,
-            )
+
         } else Text("$id", fontSize = TextUnit(1f, TextUnitType.Em), color = Color(110, 20, 239))
     }
 }
@@ -281,12 +315,13 @@ fun homeButton() {
 
 fun downloadImage(id: Long, apiClient: ApiClient<Apache5EngineConfig>) {
     val fileChooser = JFileChooser()
+    fileChooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
     val value = fileChooser.showSaveDialog(null)
     val scope = CoroutineScope(Dispatchers.Default)
     if (value == JFileChooser.APPROVE_OPTION) {
         scope.launch {
             val bytes = apiClient.getPhotoById(id, false)
-            val stream = FileOutputStream("${fileChooser.selectedFile}/${bytes.fileName}")
+            val stream = FileOutputStream("${fileChooser.selectedFile}\\${bytes.fileName}")
             stream.write(bytes.content)
             stream.flush()
             stream.close()

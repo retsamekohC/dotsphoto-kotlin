@@ -40,7 +40,7 @@ class Test {
                         ActiveScreen.LOGIN -> loginScreen(goToMain, goToRegistration)
                         ActiveScreen.MAIN -> mainScreen(goToLogin, goToAlbumsScreen, goToCreateAlbumScreen)
                         ActiveScreen.REGISTRATION -> registrationScreen(goToLogin)
-                        ActiveScreen.ALBUMS -> albumsScreen(goToMain)
+                        ActiveScreen.ALBUMS -> shareAlbumScreen(goToMain)
                         ActiveScreen.CREATE_ALBUM -> createAlbumScreen(goToMain)
                     }
                 }

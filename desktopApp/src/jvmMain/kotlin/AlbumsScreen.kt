@@ -20,7 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun albumsScreen(goToMain: () -> Unit) {
+fun shareAlbumScreen(goToMain: () -> Unit) {
     val apiClient = ApiClientLocal.current
     val albumsList by produceState(listOf<AlbumApiDto>()) {
         this.value = apiClient.getMyAlbums()
@@ -44,7 +44,11 @@ fun albumsScreen(goToMain: () -> Unit) {
                     dialogAlbum = album.id
                     openDialog()
                 }), horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Outlined.KeyboardArrowRight, contentDescription = "Album",Modifier.height(40.dp))
+                    Icon(
+                        imageVector = Icons.Outlined.KeyboardArrowRight,
+                        contentDescription = "Album",
+                        Modifier.height(40.dp)
+                    )
                     Text(
                         album.albumName,
                         Modifier.width(150.dp).height(40.dp), fontSize = TextUnit(1.5f, TextUnitType.Em),
@@ -60,13 +64,22 @@ fun albumsScreen(goToMain: () -> Unit) {
             }
             var exp by remember { mutableStateOf(false) }
             var selectedOption by remember { mutableStateOf<UserApiDto?>(null) }
-            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
-                Box(modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.TopStart)) {
+            Column(
+                verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color(200, 255, 255))
+            ) {
+                Column(
+                    modifier = Modifier.height(100.dp),
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        selectedOption?.nickname ?: "",
-                        modifier = Modifier.fillMaxWidth().clickable(onClick = { exp = true }).background(
-                            Color.Gray
-                        )
+                        selectedOption?.nickname ?: "Select user",
+                        modifier = Modifier.background(Color(75, 255, 255)).width(300.dp).height(50.dp)
+                            .clickable(onClick = { exp = true }),
+                        fontSize = TextUnit(1.5f, TextUnitType.Em),
+                        color = Color(110, 20, 239),
+                        textAlign = TextAlign.Center,
                     )
                     DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
                         options.forEach { s ->
@@ -78,20 +91,21 @@ fun albumsScreen(goToMain: () -> Unit) {
                             }
                         }
                     }
-                }
-                Button(
-                    onClick = {
-                        val scope = CoroutineScope(Dispatchers.Default)
-                        scope.launch {
-                            val user = selectedOption
-                            if (user != null && apiClient.shareAlbum(dialogAlbum, user.id)) {
-                                closeDialog()
+                    Button(
+                        onClick = {
+                            val scope = CoroutineScope(Dispatchers.Default)
+                            scope.launch {
+                                val user = selectedOption
+                                if (user != null && apiClient.shareAlbum(dialogAlbum, user.id)) {
+                                    closeDialog()
+                                }
                             }
-                        }
+                        }, Modifier.width(135.dp).height(40.dp)
+                    ) {
+                        Text(text = "Share", fontSize = TextUnit(1f, TextUnitType.Em))
                     }
-                ) {
-                    Text(text = "Submit")
                 }
+
             }
         })
     }
